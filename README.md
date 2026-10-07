@@ -5,6 +5,7 @@ Simulador didáctico, paso a paso, de la unión de tuberías de polietileno por 
 - Procedimiento en 7 etapas (12 operaciones) con animación en canvas.
 - Botón **Simular falla / mala práctica** en cada etapa.
 - Temporizador interactivo de tiempo de enfriamiento (cooling time).
+- Pestaña **Parámetros eléctricos y máquina**: máquina automática vs. manual, tensión, tiempo, estado del ciclo y temperatura, con explicación física (E = V²·t/R).
 - Modo de evaluación rápida con preguntas de opción múltiple.
 - Responsive: funciona en celulares, tablets y PC.
 
