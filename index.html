@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Electrofusión - NAG 140</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    :root {
+      --celeste-primario: #1b75bb;
+      --celeste-hover: #145c94;
+      --celeste-claro: #e8f3fa;
+      --celeste-borde: #b6daf2;
+      --blanco: #ffffff;
+      --gris-fondo: #f8fafc;
+      --gris-borde: #e2e8f0;
+      --texto-oscuro: #1e293b;
+      --texto-secundario: #64748b;
+      --rojo-alerta: #dc2626;
+      --rojo-fondo: #fef2f2;
+      --rojo-borde: #fecaca;
+    }
+
+    body { background: var(--gris-fondo); color: var(--texto-oscuro); display: flex; flex-direction: column; height: 100vh; }
+    
+    /* Header Institucional */
+    header {
+      background: var(--blanco);
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--celeste-primario);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--celeste-primario);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    header .badge {
+      font-size: 0.8rem;
+      background: var(--celeste-claro);
+      color: var(--celeste-primario);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      border: 1px solid var(--celeste-borde);
+    }
+
+    .main-container { display: flex; flex: 1; overflow: hidden; }
+    
+    /* Área de Animación */
+    .viewport {
+      flex: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+      padding: 20px;
+    }
+    canvas {
+      background: var(--blanco);
+      border-radius: 12px;
+      border: 1px solid var(--gris-borde);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    /* Panel Lateral de Procedimiento */
+    .panel {
+      flex: 2;
+      background: var(--blanco);
+      border-left: 1px solid var(--gris-borde);
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .card {
+      background: var(--blanco);
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid var(--gris-borde);
+      border-left: 5px solid var(--celeste-primario);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .card .step-indicator {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--celeste-primario);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .card h3 { font-size: 1.05rem; color: var(--texto-oscuro); margin-bottom: 8px; font-weight: 600; }
+    .card p { font-size: 0.9rem; line-height: 1.5; color: var(--texto-secundario); }
+
+    /* Tarjeta de Falla / Advertencia */
+    .failure-box {
+      background: var(--rojo-fondo);
+      border: 1px solid var(--rojo-borde);
+      border-left: 5px solid var(--rojo-alerta);
+      display: none;
+    }
+    .failure-box .step-indicator { color: var(--rojo-alerta); }
+    .failure-box h3 { color: var(--rojo-alerta); }
+    .failure-box p { color: #7f1d1d; }
+
+    /* Botones y Controles */
+    .action-section { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+    
+    .toggle-failure {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--blanco);
+      color: var(--rojo-alerta);
+      border: 1.5px solid var(--rojo-alerta);
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .toggle-failure:hover { background: var(--rojo-fondo); }
+    .toggle-failure.active { background: var(--rojo-alerta); color: var(--blanco); }
+
+    .nav-controls { display: flex; gap: 10px; }
+    button.nav-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-next { background: var(--celeste-primario); color: var(--blanco); }
+    .btn-next:hover { background: var(--celeste-hover); }
+    .btn-prev { background: var(--blanco); color: var(--texto-secundario); border: 1px solid var(--gris-borde); }
+    .btn-prev:hover { background: var(--gris-fondo); color: var(--texto-oscuro); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Unión por Electrofusión</h1>
+  <span class="badge">NAG-140 / ISO 4427</span>
+</header>
+
+<div class="main-container">
+  <div class="viewport">
+    <canvas id="simCanvas" width="680" height="380"></canvas>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <div class="step-indicator" id="stepBadge">Etapa de Preparación</div>
+      <h3 id="stepTitle">Paso 1: Corte ortogonal de extremos</h3>
+      <p id="stepDesc">Corte perpendicular a 90° con cortatubos rotativo o guillotina para asegurar el asentamiento parejo contra el tope central del accesorio.</p>
+    </div>
+
+    <div class="card failure-box" id="failCard">
+      <div class="step-indicator">Punto Crítico de Inspección</div>
+      <h3 id="failTitle">Riesgo por Corte Inclinado</h3>
+      <p id="failDesc">Al no apoyar parejo en el tope, el polietileno fundido colapsa hacia la luz interna de la tubería obturando el paso de gas.</p>
+    </div>
+
+    <div class="action-section">
+      <button class="toggle-failure" id="failBtn" onclick="toggleSimFailure()">Simular Falla / Mala Práctica</button>
+      <div class="nav-controls">
+        <button class="nav-btn btn-prev" onclick="prevStep()">Anterior</button>
+        <button class="nav-btn btn-next" onclick="nextStep()">Siguiente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('simCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let currentStep = 0;
+  let hasFailure = false;
+  let fusionProgress = 0;
+  let timerId = null;
+
+  const steps = [
+    {
+      badge: "Operación 1 / 12",
+      title: "Paso 1: Corte a 90° de la tubería",
+      desc: "Los extremos deben quedar planos y perpendiculares al eje para evitar holguras en el tope interno del accesorio.",
+      failTitle: "Falla: Corte Oblicuo / Inclinado",
+      failDesc: "La separación irregular genera fuga interna de polietileno fundido durante el calentamiento, tapando el conducto."
+    },
+    {
+      badge: "Operaciones 2 y 3 / 12",
+      title: "Paso 2 y 3: Marcado y Raspado mecánico",
+      desc: "Se marca la zona y se raspa perimetralmente para retirar la capa oxidada por intemperie/UV (~0.2 mm) con raspador calibrado.",
+      failTitle: "Falla: Capa Oxidada sin Raspar",
+      failDesc: "La película oxidada impide la coalescencia molecular entre el caño y el accesorio, causando desprendimiento bajo presión."
+    },
+    {
+      badge: "Operaciones 4 y 5 / 12",
+      title: "Paso 4 y 5: Remarcado y Limpieza química",
+      desc: "Se traza la línea testigo de inserción y se desengrasa con alcohol isopropílico sin volver a tocar con las manos.",
+      failTitle: "Falla: Contaminación por Grasas o Polvo",
+      failDesc: "La suciedad o el uso de solventes no permitidos genera inclusiones, ampollas y falta de hermeticidad en la unión."
+    },
+    {
+      badge: "Operaciones 6 y 7 / 12",
+      title: "Paso 6 y 7: Inserción y Centrado de Cupla",
+      desc: "Se encastra la cupla hasta la marca testigo, asegurando la distribución simétrica de las zonas de soldadura.",
+      failTitle: "Falla: Inserción Corta / Parcial",
+      failDesc: "Las espiras calefactoras quedan descubiertas o fuera del área de contacto, recalentando y quemando el cuerpo plástico."
+    },
+    {
+      badge: "Operaciones 8 y 9 / 12",
+      title: "Paso 8 y 9: Alineación y Sujeción con Mordazas",
+      desc: "Montaje obligatorio del alineador mecánico para absorber tensiones residuales, corregir ovalizaciones y anclar la unión.",
+      failTitle: "Falla: Desalineación y Sin Mordaza",
+      failDesc: "El peso y curvatura de la tubería desalinea la cupla reblandecida; el material fundido se expulsa por los bordes."
+    },
+    {
+      badge: "Operación 10 / 12",
+      title: "Paso 10: Ciclo de Electrofusión",
+      desc: "Conexión de bornes, lectura del código de barras y calentamiento. Las Zonas Frías (ZF) sellan y los testigos de fusión se elevan.",
+      failTitle: "Falla: Doble Ciclo de Fusión",
+      failDesc: "Según NAG-140, si un ciclo fue interrumpido o ya ejecutado, la pieza NUNCA debe recalentarse; debe inutilizarse."
+    },
+    {
+      badge: "Operaciones 11 y 12 / 12",
+      title: "Paso 11 y 12: Tiempo de Enfriamiento y Retiro",
+      desc: "Respetar de forma rigurosa el Cooling Time marcado en la pieza antes de desclavar mordazas o mover la cañería.",
+      failTitle: "Falla: Desmolde Prematuro",
+      failDesc: "Someter la pieza tibia a esfuerzos mecánicos rompe los enlaces cristalinos antes de su polimerización final."
+    }
+  ];
+
+  function updateUI() {
+    document.getElementById('stepBadge').innerText = steps[currentStep].badge;
+    document.getElementById('stepTitle').innerText = steps[currentStep].title;
+    document.getElementById('stepDesc').innerText = steps[currentStep].desc;
+    
+    const failCard = document.getElementById('failCard');
+    const failBtn = document.getElementById('failBtn');
+    
+    if (hasFailure) {
+      failCard.style.display = 'block';
+      document.getElementById('failTitle').innerText = steps[currentStep].failTitle;
+      document.getElementById('failDesc').innerText = steps[currentStep].failDesc;
+      failBtn.innerText = "Corregir y Ver Procedimiento Correcto";
+      failBtn.classList.add('active');
+    } else {
+      failCard.style.display = 'none';
+      failBtn.innerText = "Simular Falla / Mala Práctica";
+      failBtn.classList.remove('active');
+    }
+    renderScene();
+  }
+
+  function nextStep() {
+    if (currentStep < steps.length - 1) {
+      currentStep++;
+      hasFailure = false;
+      fusionProgress = 0;
+      clearInterval(timerId);
+      if(currentStep === 5) startFusionAnim();
+      updateUI();
+    }
+  }
+
+  function prevStep() {
+    if (currentStep > 0) {
+      currentStep--;
+      hasFailure = false;
+      fusionProgress = 0;
+      clearInterval(timerId);
+      updateUI();
+    }
+  }
+
+  function toggleSimFailure() {
+    hasFailure = !hasFailure;
+    updateUI();
+  }
+
+  function startFusionAnim() {
+    fusionProgress = 0;
+    timerId = setInterval(() => {
+      fusionProgress += 0.02;
+      if (fusionProgress >= 1) {
+        fusionProgress = 1;
+        clearInterval(timerId);
+      }
+      renderScene();
+    }, 45);
+  }
+
+  function renderScene() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width / 2;
+    const cy = 190;
+    const pipeW = 190;
+    const pipeH = 65;
+    const couplerW = 210;
+    const couplerH = 105;
+
+    // Fondo técnico con cuadrícula milimétrica tenue
+    ctx.strokeStyle = "#f1f5f9";
+    ctx.lineWidth = 1;
+    for(let x = 0; x < canvas.width; x += 20) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for(let y = 0; y < canvas.height; y += 20) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // 1. Caños PE (Amarillo Gas reglamentario)
+    ctx.fillStyle = "#facc15";
+    ctx.strokeStyle = "#ca8a04";
+    ctx.lineWidth = 1.5;
+
+    // Caño Izquierdo
+    ctx.fillRect(cx - pipeW - 10, cy - pipeH/2, pipeW, pipeH);
+    ctx.strokeRect(cx - pipeW - 10, cy - pipeH/2, pipeW, pipeH);
+
+    // Caño Derecho
+    if (currentStep === 0 && hasFailure) {
+      // Corte oblicuo
+      ctx.beginPath();
+      ctx.moveTo(cx + 10, cy - pipeH/2);
+      ctx.lineTo(cx + pipeW + 10, cy - pipeH/2);
+      ctx.lineTo(cx + pipeW + 10, cy + pipeH/2);
+      ctx.lineTo(cx + 45, cy + pipeH/2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else if (currentStep >= 4 && hasFailure && currentStep === 4) {
+      // Caño derecho desalineado angularmente
+      ctx.save();
+      ctx.translate(cx + 10, cy);
+      ctx.rotate(0.08);
+      ctx.fillRect(0, -pipeH/2, pipeW, pipeH);
+      ctx.strokeRect(0, -pipeH/2, pipeW, pipeH);
+      ctx.restore();
+    } else {
+      ctx.fillRect(cx + 10, cy - pipeH/2, pipeW, pipeH);
+      ctx.strokeRect(cx + 10, cy - pipeH/2, pipeW, pipeH);
+    }
+
+    // 2. Marcas de inserción / raspado
+    if (currentStep >= 1 && currentStep <= 4) {
+      ctx.strokeStyle = (hasFailure && currentStep === 1) ? "rgba(0,0,0,0)" : "#0284c7";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for(let i = -75; i < -15; i += 10) {
+        ctx.moveTo(cx + i, cy - pipeH/2 - 4);
+        ctx.lineTo(cx + i, cy - pipeH/2 + 6);
+      }
+      ctx.stroke();
+      
+      // Línea testigo de penetración
+      ctx.strokeStyle = "#dc2626";
+      ctx.setLineDash([4, 2]);
+      ctx.beginPath();
+      ctx.moveTo(cx - 85, cy - pipeH/2 - 12);
+      ctx.lineTo(cx - 85, cy + pipeH/2 + 12);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // 3. Cupla de PE
+    if (currentStep >= 3) {
+      ctx.fillStyle = "#1e293b"; // Polietileno negro
+      ctx.fillRect(cx - couplerW/2, cy - couplerH/2, couplerW, couplerH);
+
+      // Bornes de conexión superiores
+      ctx.fillStyle = "#475569";
+      ctx.fillRect(cx - 55, cy - couplerH/2 - 18, 14, 18);
+      ctx.fillRect(cx + 41, cy - couplerH/2 - 18, 14, 18);
+
+      // Pines Testigos
+      const pinLift = (currentStep >= 5) ? fusionProgress * 9 : 0;
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(cx - 28, cy - couplerH/2 - 5 - pinLift, 7, 10);
+      ctx.fillRect(cx + 21, cy - couplerH/2 - 5 - pinLift, 7, 10);
+
+      // Espiras de cobre
+      const coilColor = (currentStep === 5) ? `rgb(255, ${Math.floor(100 + 155*fusionProgress)}, 0)` : "#38bdf8";
+      ctx.fillStyle = coilColor;
+      
+      [-75, -65, -55, -45, -35, 35, 45, 55, 65, 75].forEach(offset => {
+        ctx.beginPath();
+        ctx.arc(cx + offset, cy - pipeH/2 - 5, 2.8, 0, Math.PI*2);
+        ctx.arc(cx + offset, cy + pipeH/2 + 5, 2.8, 0, Math.PI*2);
+        ctx.fill();
+      });
+
+      // Zona plástica de fundición
+      if (currentStep === 5 && fusionProgress > 0.25) {
+        ctx.fillStyle = `rgba(234, 88, 12, ${fusionProgress * 0.75})`;
+        ctx.fillRect(cx - 80, cy - pipeH/2 - 2, 50, 4);
+        ctx.fillRect(cx + 30, cy - pipeH/2 - 2, 50, 4);
+      }
+
+      // 4. Mordazas de alineación (Paso 4 en adelante si no hay falla)
+      if (currentStep >= 4 && !(currentStep === 4 && hasFailure)) {
+        ctx.fillStyle = "rgba(100, 116, 139, 0.85)";
+        ctx.fillRect(cx - couplerW/2 - 32, cy - couplerH/2 - 14, 24, couplerH + 28);
+        ctx.fillRect(cx + couplerW/2 + 8, cy - couplerH/2 - 14, 24, couplerH + 28);
+      }
+    }
+
+    // 5. Rótulo técnico en Canvas
+    ctx.fillStyle = "#64748b";
+    ctx.font = "600 11px system-ui";
+    ctx.fillText("CORTE LONGITUDINAL INTERNO", 18, 25);
+    
+    if(currentStep >= 3) {
+      ctx.fillStyle = "#0284c7";
+      ctx.fillText("[ZF] ZONA FRÍA", cx - 95, cy + couplerH/2 + 25);
+      ctx.fillText("[ZC] ZONA CALIENTE", cx - 10, cy + couplerH/2 + 25);
+      ctx.fillText("[ZF] ZONA FRÍA", cx + 75, cy + couplerH/2 + 25);
+    }
+  }
+
+  updateUI();
+</script>
+</body>
+</html>
