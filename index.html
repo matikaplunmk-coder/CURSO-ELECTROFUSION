@@ -6,7 +6,7 @@
   <title>Simulador de Electrofusión - NAG 140</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    
+
     :root {
       --celeste-primario: #1b75bb;
       --celeste-hover: #145c94;
@@ -20,29 +20,28 @@
       --rojo-alerta: #dc2626;
       --rojo-fondo: #fef2f2;
       --rojo-borde: #fecaca;
+      --verde: #16a34a;
+      --verde-fondo: #f0fdf4;
+      --verde-borde: #bbf7d0;
     }
 
-    body { background: var(--gris-fondo); color: var(--texto-oscuro); display: flex; flex-direction: column; height: 100vh; }
-    
-    /* Header Institucional */
+    html, body { height: 100%; }
+    body { background: var(--gris-fondo); color: var(--texto-oscuro); display: flex; flex-direction: column; min-height: 100vh; }
+
     header {
       background: var(--blanco);
-      padding: 16px 28px;
+      padding: 14px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
       border-bottom: 2px solid var(--celeste-primario);
       box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
-    header h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--celeste-primario);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    header .badge {
+    header h1 { font-size: 1.2rem; font-weight: 700; color: var(--celeste-primario); }
+    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .badge {
       font-size: 0.8rem;
       background: var(--celeste-claro);
       color: var(--celeste-primario);
@@ -50,30 +49,49 @@
       border-radius: 20px;
       font-weight: 600;
       border: 1px solid var(--celeste-borde);
+      white-space: nowrap;
     }
+    .btn-quiz {
+      background: var(--celeste-primario);
+      color: var(--blanco);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn-quiz:hover { background: var(--celeste-hover); }
 
-    .main-container { display: flex; flex: 1; overflow: hidden; }
-    
-    /* Área de Animación */
+    .progress { height: 5px; background: var(--gris-borde); }
+    .progress > div { height: 100%; width: 0; background: var(--celeste-primario); transition: width .3s; }
+
+    .main-container { display: flex; flex: 1; min-height: 0; }
+
     .viewport {
       flex: 3;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       background: #f1f5f9;
       padding: 20px;
+      min-width: 0;
     }
     canvas {
+      width: 100%;
+      max-width: 760px;
+      height: auto;
+      aspect-ratio: 680 / 380;
       background: var(--blanco);
       border-radius: 12px;
       border: 1px solid var(--gris-borde);
       box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      display: block;
     }
 
-    /* Panel Lateral de Procedimiento */
     .panel {
       flex: 2;
+      min-width: 320px;
       background: var(--blanco);
       border-left: 1px solid var(--gris-borde);
       padding: 24px;
@@ -82,7 +100,7 @@
       flex-direction: column;
       gap: 16px;
     }
-    
+
     .card {
       background: var(--blanco);
       padding: 18px;
@@ -102,7 +120,6 @@
     .card h3 { font-size: 1.05rem; color: var(--texto-oscuro); margin-bottom: 8px; font-weight: 600; }
     .card p { font-size: 0.9rem; line-height: 1.5; color: var(--texto-secundario); }
 
-    /* Tarjeta de Falla / Advertencia */
     .failure-box {
       background: var(--rojo-fondo);
       border: 1px solid var(--rojo-borde);
@@ -113,9 +130,57 @@
     .failure-box h3 { color: var(--rojo-alerta); }
     .failure-box p { color: #7f1d1d; }
 
-    /* Botones y Controles */
+    /* Temporizador de enfriamiento */
+    .timer-card { display: none; }
+    .timer-display {
+      font-variant-numeric: tabular-nums;
+      font-size: 2.6rem;
+      font-weight: 700;
+      text-align: center;
+      color: var(--texto-oscuro);
+      margin: 6px 0;
+      letter-spacing: 0.02em;
+    }
+    .timer-display.done { color: var(--verde); }
+    .timer-bar { height: 8px; background: var(--gris-borde); border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+    .timer-bar > div { height: 100%; width: 0; background: #f97316; transition: width .25s linear; }
+    .timer-bar > div.done { background: var(--verde); }
+    .timer-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+    .timer-row label { font-size: 0.8rem; color: var(--texto-secundario); }
+    .timer-row select {
+      flex: 1;
+      min-width: 140px;
+      padding: 8px;
+      border: 1px solid var(--gris-borde);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      background: var(--blanco);
+      color: var(--texto-oscuro);
+    }
+    .timer-note { font-size: 0.78rem; color: var(--texto-secundario); line-height: 1.4; margin-top: 6px; }
+    .timer-status { font-size: 0.85rem; font-weight: 600; margin-top: 8px; min-height: 1.2em; }
+    .timer-status.ok { color: var(--verde); }
+    .timer-status.bad { color: var(--rojo-alerta); }
+
+    button.small {
+      flex: 1;
+      padding: 9px 10px;
+      border: 1px solid var(--gris-borde);
+      border-radius: 8px;
+      background: var(--blanco);
+      color: var(--texto-oscuro);
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    button.small:hover { background: var(--gris-fondo); }
+    button.small.primary { background: var(--celeste-primario); border-color: var(--celeste-primario); color: var(--blanco); }
+    button.small.primary:hover { background: var(--celeste-hover); }
+    button.small.ready { background: var(--verde); border-color: var(--verde); color: var(--blanco); }
+    button.small.ready:hover { background: #15803d; }
+
     .action-section { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
-    
+
     .toggle-failure {
       width: 100%;
       padding: 10px 14px;
@@ -142,55 +207,176 @@
       cursor: pointer;
       transition: all 0.2s;
     }
+    button.nav-btn:disabled { opacity: .45; cursor: not-allowed; }
     .btn-next { background: var(--celeste-primario); color: var(--blanco); }
-    .btn-next:hover { background: var(--celeste-hover); }
+    .btn-next:hover:not(:disabled) { background: var(--celeste-hover); }
     .btn-prev { background: var(--blanco); color: var(--texto-secundario); border: 1px solid var(--gris-borde); }
-    .btn-prev:hover { background: var(--gris-fondo); color: var(--texto-oscuro); }
+    .btn-prev:hover:not(:disabled) { background: var(--gris-fondo); color: var(--texto-oscuro); }
+
+    .disclaimer { font-size: 0.72rem; color: var(--texto-secundario); line-height: 1.4; text-align: center; }
+
+    /* Modal de evaluación */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: var(--blanco);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 560px;
+      max-height: 92vh;
+      overflow-y: auto;
+      padding: 22px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .modal-head h2 { font-size: 1.1rem; color: var(--celeste-primario); }
+    .close-x { background: none; border: none; font-size: 1.5rem; line-height: 1; cursor: pointer; color: var(--texto-secundario); padding: 0 6px; }
+    .q-meta { font-size: 0.78rem; font-weight: 700; color: var(--texto-secundario); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .q-text { font-size: 1.02rem; font-weight: 600; line-height: 1.4; margin-bottom: 14px; }
+    .opt {
+      display: block; width: 100%; text-align: left;
+      padding: 12px 14px; margin-bottom: 8px;
+      background: var(--blanco);
+      border: 1.5px solid var(--gris-borde);
+      border-radius: 10px;
+      font-size: 0.92rem; line-height: 1.35;
+      color: var(--texto-oscuro);
+      cursor: pointer;
+    }
+    .opt:hover:not(:disabled) { border-color: var(--celeste-primario); background: var(--celeste-claro); }
+    .opt.correct { border-color: var(--verde); background: var(--verde-fondo); }
+    .opt.wrong { border-color: var(--rojo-alerta); background: var(--rojo-fondo); }
+    .opt:disabled { cursor: default; }
+    .explain { font-size: 0.88rem; line-height: 1.45; padding: 12px; border-radius: 10px; margin: 6px 0 14px; }
+    .explain.ok { background: var(--verde-fondo); border: 1px solid var(--verde-borde); color: #14532d; }
+    .explain.bad { background: var(--rojo-fondo); border: 1px solid var(--rojo-borde); color: #7f1d1d; }
+    .score-big { font-size: 2.6rem; font-weight: 700; text-align: center; color: var(--celeste-primario); margin: 8px 0; }
+    .score-msg { text-align: center; color: var(--texto-secundario); margin-bottom: 14px; font-size: 0.95rem; }
+    .review-item { font-size: 0.85rem; padding: 8px 0; border-top: 1px solid var(--gris-borde); line-height: 1.4; }
+    .review-item b.ok { color: var(--verde); }
+    .review-item b.bad { color: var(--rojo-alerta); }
+
+    /* Tablets y celulares */
+    @media (max-width: 860px) {
+      .main-container { flex-direction: column; }
+      .viewport { padding: 12px; flex: none; }
+      .panel { border-left: none; border-top: 1px solid var(--gris-borde); padding: 16px; min-width: 0; overflow: visible; }
+      header { padding: 12px 16px; }
+      header h1 { font-size: 1.05rem; }
+      .timer-display { font-size: 2.2rem; }
+    }
   </style>
 </head>
 <body>
 
 <header>
   <h1>Unión por Electrofusión</h1>
-  <span class="badge">NAG-140 / ISO 4427</span>
+  <div class="header-right">
+    <span class="badge">NAG-140 / ISO 4427</span>
+    <button class="btn-quiz" onclick="openQuiz()">Modo evaluación</button>
+  </div>
 </header>
+<div class="progress"><div id="progressBar"></div></div>
 
 <div class="main-container">
   <div class="viewport">
-    <canvas id="simCanvas" width="680" height="380"></canvas>
+    <canvas id="simCanvas" width="680" height="380" role="img" aria-label="Corte longitudinal de la unión por electrofusión"></canvas>
   </div>
 
   <div class="panel">
     <div class="card">
-      <div class="step-indicator" id="stepBadge">Etapa de Preparación</div>
-      <h3 id="stepTitle">Paso 1: Corte ortogonal de extremos</h3>
-      <p id="stepDesc">Corte perpendicular a 90° con cortatubos rotativo o guillotina para asegurar el asentamiento parejo contra el tope central del accesorio.</p>
+      <div class="step-indicator" id="stepBadge"></div>
+      <h3 id="stepTitle"></h3>
+      <p id="stepDesc"></p>
     </div>
 
     <div class="card failure-box" id="failCard">
       <div class="step-indicator">Punto Crítico de Inspección</div>
-      <h3 id="failTitle">Riesgo por Corte Inclinado</h3>
-      <p id="failDesc">Al no apoyar parejo en el tope, el polietileno fundido colapsa hacia la luz interna de la tubería obturando el paso de gas.</p>
+      <h3 id="failTitle"></h3>
+      <p id="failDesc"></p>
+    </div>
+
+    <div class="card timer-card" id="timerCard">
+      <div class="step-indicator">Tiempo de enfriamiento (cooling time)</div>
+      <div class="timer-display" id="timerDisplay">00:00</div>
+      <div class="timer-bar"><div id="timerBar"></div></div>
+      <div class="timer-row">
+        <label for="coolSelect">Duración:</label>
+        <select id="coolSelect" onchange="setCoolDuration(this.value)">
+          <option value="20">Demo rápida (20 s)</option>
+          <option value="300">5 min</option>
+          <option value="600" selected>10 min</option>
+          <option value="1200">20 min</option>
+          <option value="1800">30 min</option>
+        </select>
+      </div>
+      <div class="timer-row">
+        <button class="small primary" id="coolStartBtn" onclick="toggleCooling()">Iniciar</button>
+        <button class="small" onclick="resetCooling()">Reiniciar</button>
+        <button class="small" id="releaseBtn" onclick="releaseClamps()">Retirar mordazas</button>
+      </div>
+      <div class="timer-status" id="timerStatus"></div>
+      <p class="timer-note">Valor ilustrativo. En obra el cooling time real es el indicado en la etiqueta del accesorio (varía con el diámetro y la temperatura ambiente).</p>
     </div>
 
     <div class="action-section">
       <button class="toggle-failure" id="failBtn" onclick="toggleSimFailure()">Simular Falla / Mala Práctica</button>
       <div class="nav-controls">
-        <button class="nav-btn btn-prev" onclick="prevStep()">Anterior</button>
-        <button class="nav-btn btn-next" onclick="nextStep()">Siguiente</button>
+        <button class="nav-btn btn-prev" id="prevBtn" onclick="prevStep()">Anterior</button>
+        <button class="nav-btn btn-next" id="nextBtn" onclick="nextStep()">Siguiente</button>
       </div>
+      <p class="disclaimer">Material de capacitación. En obra rigen la NAG-140 vigente y el manual del fabricante.</p>
     </div>
   </div>
 </div>
 
+<div class="overlay" id="quizOverlay" onclick="if(event.target===this) closeQuiz()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
+    <div class="modal-head">
+      <h2 id="quizTitle">Evaluación rápida NAG-140</h2>
+      <button class="close-x" onclick="closeQuiz()" aria-label="Cerrar">&times;</button>
+    </div>
+    <div id="quizBody"></div>
+  </div>
+</div>
+
 <script>
+  /* ---------- Canvas responsive (nítido en pantallas HiDPI) ---------- */
   const canvas = document.getElementById('simCanvas');
   const ctx = canvas.getContext('2d');
+  const W = 680, H = 380;
 
+  function setupCanvas() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    renderScene();
+  }
+  window.addEventListener('resize', setupCanvas);
+
+  /* ---------- Estado ---------- */
   let currentStep = 0;
   let hasFailure = false;
-  let fusionProgress = 0;
-  let timerId = null;
+  let fusionProgress = 0;      // 0..1 (ciclo de calentamiento)
+  let fusionTimer = null;
+  let clampsRemoved = false;
+
+  let coolDuration = 600;      // segundos
+  let coolRemainingMs = 600000;
+  let coolEndAt = 0;
+  let coolRunning = false;
+  let coolTimer = null;
+  let coolMsg = '';            // '' | 'ok' | 'bad'
+
+  const LAST = 6;
 
   const steps = [
     {
@@ -238,202 +424,566 @@
     {
       badge: "Operaciones 11 y 12 / 12",
       title: "Paso 11 y 12: Tiempo de Enfriamiento y Retiro",
-      desc: "Respetar de forma rigurosa el Cooling Time marcado en la pieza antes de desclavar mordazas o mover la cañería.",
+      desc: "Respetar de forma rigurosa el Cooling Time marcado en la pieza antes de desclavar mordazas o mover la cañería. Iniciá el temporizador y esperá a que llegue a cero.",
       failTitle: "Falla: Desmolde Prematuro",
       failDesc: "Someter la pieza tibia a esfuerzos mecánicos rompe los enlaces cristalinos antes de su polimerización final."
     }
   ];
 
+  /* ---------- UI ---------- */
+  const $ = id => document.getElementById(id);
+
   function updateUI() {
-    document.getElementById('stepBadge').innerText = steps[currentStep].badge;
-    document.getElementById('stepTitle').innerText = steps[currentStep].title;
-    document.getElementById('stepDesc').innerText = steps[currentStep].desc;
-    
-    const failCard = document.getElementById('failCard');
-    const failBtn = document.getElementById('failBtn');
-    
+    const s = steps[currentStep];
+    $('stepBadge').innerText = s.badge;
+    $('stepTitle').innerText = s.title;
+    $('stepDesc').innerText = s.desc;
+    $('progressBar').style.width = ((currentStep + 1) / steps.length * 100) + '%';
+    $('prevBtn').disabled = currentStep === 0;
+    $('nextBtn').disabled = currentStep === LAST;
+
     if (hasFailure) {
-      failCard.style.display = 'block';
-      document.getElementById('failTitle').innerText = steps[currentStep].failTitle;
-      document.getElementById('failDesc').innerText = steps[currentStep].failDesc;
-      failBtn.innerText = "Corregir y Ver Procedimiento Correcto";
-      failBtn.classList.add('active');
+      $('failCard').style.display = 'block';
+      $('failTitle').innerText = s.failTitle;
+      $('failDesc').innerText = s.failDesc;
+      $('failBtn').innerText = "Corregir y Ver Procedimiento Correcto";
+      $('failBtn').classList.add('active');
     } else {
-      failCard.style.display = 'none';
-      failBtn.innerText = "Simular Falla / Mala Práctica";
-      failBtn.classList.remove('active');
+      $('failCard').style.display = 'none';
+      $('failBtn').innerText = "Simular Falla / Mala Práctica";
+      $('failBtn').classList.remove('active');
     }
+
+    $('timerCard').style.display = currentStep === LAST ? 'block' : 'none';
+    updateTimerUI();
     renderScene();
   }
 
-  function nextStep() {
-    if (currentStep < steps.length - 1) {
-      currentStep++;
-      hasFailure = false;
-      fusionProgress = 0;
-      clearInterval(timerId);
-      if(currentStep === 5) startFusionAnim();
-      updateUI();
-    }
+  /* Reinicia todo el estado transitorio al cambiar de paso */
+  function resetStepState() {
+    hasFailure = false;
+    clampsRemoved = false;
+    clearInterval(fusionTimer);
+    fusionTimer = null;
+    fusionProgress = (currentStep === LAST) ? 1 : 0;   // en enfriamiento los testigos ya están levantados
+    stopCooling();
+    coolRemainingMs = coolDuration * 1000;
+    coolMsg = '';
   }
 
-  function prevStep() {
-    if (currentStep > 0) {
-      currentStep--;
-      hasFailure = false;
-      fusionProgress = 0;
-      clearInterval(timerId);
-      updateUI();
-    }
+  function goToStep(n) {
+    currentStep = n;
+    resetStepState();
+    if (currentStep === 5) startFusionAnim();
+    updateUI();
   }
+  function nextStep() { if (currentStep < LAST) goToStep(currentStep + 1); }
+  function prevStep() { if (currentStep > 0) goToStep(currentStep - 1); }
 
   function toggleSimFailure() {
     hasFailure = !hasFailure;
+    if (currentStep === LAST) {
+      if (hasFailure) { clampsRemoved = true; coolMsg = 'bad'; }
+      else { clampsRemoved = false; coolMsg = ''; }
+    }
+    if (currentStep === 5) startFusionAnim();   // repite la animación en cada alternancia
     updateUI();
   }
 
+  /* ---------- Animación de fusión ---------- */
   function startFusionAnim() {
+    clearInterval(fusionTimer);
     fusionProgress = 0;
-    timerId = setInterval(() => {
+    fusionTimer = setInterval(() => {
       fusionProgress += 0.02;
       if (fusionProgress >= 1) {
         fusionProgress = 1;
-        clearInterval(timerId);
+        clearInterval(fusionTimer);
+        fusionTimer = null;
       }
       renderScene();
     }, 45);
   }
 
+  /* ---------- Temporizador de enfriamiento ---------- */
+  function fmt(ms) {
+    const t = Math.ceil(ms / 1000);
+    return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+  }
+  function coolProgress() { return 1 - coolRemainingMs / (coolDuration * 1000); }
+
+  function updateTimerUI() {
+    const done = coolRemainingMs <= 0;
+    $('timerDisplay').innerText = fmt(coolRemainingMs);
+    $('timerDisplay').classList.toggle('done', done);
+    $('timerBar').style.width = (coolProgress() * 100) + '%';
+    $('timerBar').classList.toggle('done', done);
+    $('coolStartBtn').innerText = coolRunning ? 'Pausar' : (coolRemainingMs < coolDuration * 1000 && !done ? 'Reanudar' : 'Iniciar');
+    $('coolStartBtn').disabled = done;
+    $('releaseBtn').classList.toggle('ready', done);
+    $('releaseBtn').disabled = clampsRemoved && !hasFailure;
+
+    const st = $('timerStatus');
+    st.className = 'timer-status';
+    if (hasFailure) { st.innerText = 'Mordazas retiradas antes de tiempo: la unión se dañó.'; st.classList.add('bad'); }
+    else if (clampsRemoved) { st.innerText = 'Mordazas retiradas correctamente. Unión lista para su inspección.'; st.classList.add('ok'); }
+    else if (done) { st.innerText = 'Enfriamiento completo. Ya podés retirar las mordazas.'; st.classList.add('ok'); }
+    else if (coolRunning) st.innerText = 'Enfriando… no mover ni someter a esfuerzos la cañería.';
+    else st.innerText = '';
+  }
+
+  function setCoolDuration(sec) {
+    coolDuration = parseInt(sec, 10);
+    stopCooling();
+    coolRemainingMs = coolDuration * 1000;
+    hasFailure = false; clampsRemoved = false;
+    updateUI();
+  }
+
+  function stopCooling() {
+    clearInterval(coolTimer);
+    coolTimer = null;
+    coolRunning = false;
+  }
+
+  function toggleCooling() {
+    if (coolRemainingMs <= 0) return;
+    if (coolRunning) {
+      coolRemainingMs = Math.max(0, coolEndAt - Date.now());
+      stopCooling();
+    } else {
+      coolRunning = true;
+      coolEndAt = Date.now() + coolRemainingMs;
+      coolTimer = setInterval(coolTick, 250);
+    }
+    updateTimerUI();
+    renderScene();
+  }
+
+  function coolTick() {
+    coolRemainingMs = Math.max(0, coolEndAt - Date.now());
+    if (coolRemainingMs <= 0) {
+      stopCooling();
+      notifyDone();
+    }
+    updateTimerUI();
+    renderScene();
+  }
+
+  function resetCooling() {
+    stopCooling();
+    coolRemainingMs = coolDuration * 1000;
+    hasFailure = false; clampsRemoved = false;
+    updateUI();
+  }
+
+  function releaseClamps() {
+    if (clampsRemoved && !hasFailure) return;
+    if (hasFailure) { hasFailure = false; clampsRemoved = false; resetCooling(); return; }
+    if (coolRemainingMs > 0) {          // retiro prematuro => mala práctica
+      if (coolRunning) { coolRemainingMs = Math.max(0, coolEndAt - Date.now()); }
+      stopCooling();
+      hasFailure = true;
+      clampsRemoved = true;
+    } else {
+      clampsRemoved = true;
+    }
+    updateUI();
+  }
+
+  function notifyDone() {
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value = 880; g.gain.value = 0.15;
+      o.start(); o.stop(ac.currentTime + 0.35);
+    } catch (e) {}
+  }
+
+  /* ---------- Dibujo ---------- */
+  const specks = Array.from({ length: 34 }, (_, i) => {
+    const r = (n) => { const x = Math.sin(i * 91.7 + n * 13.3) * 10000; return x - Math.floor(x); };
+    return { x: r(1), y: r(2), s: 1 + r(3) * 2.2 };
+  });
+
+  function mix(a, b, t) {
+    return `rgb(${Math.round(a[0] + (b[0] - a[0]) * t)},${Math.round(a[1] + (b[1] - a[1]) * t)},${Math.round(a[2] + (b[2] - a[2]) * t)})`;
+  }
+
   function renderScene() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, W, H);
 
-    const cx = canvas.width / 2;
-    const cy = 190;
-    const pipeW = 190;
-    const pipeH = 65;
-    const couplerW = 210;
-    const couplerH = 105;
+    const cx = W / 2, cy = 190;
+    const pipeW = 190, pipeH = 65;
+    const couplerW = 210, couplerH = 105;
+    const wall = (couplerH - pipeH) / 2;      // espesor de pared de la cupla (20 px)
+    const top = cy - pipeH / 2, bot = cy + pipeH / 2;
+    const step = currentStep, fail = hasFailure;
 
-    // Fondo técnico con cuadrícula milimétrica tenue
+    // Cuadrícula tenue
     ctx.strokeStyle = "#f1f5f9";
     ctx.lineWidth = 1;
-    for(let x = 0; x < canvas.width; x += 20) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-    }
-    for(let y = 0; y < canvas.height; y += 20) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-    }
+    for (let x = 0; x < W; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
 
-    // 1. Caños PE (Amarillo Gas reglamentario)
-    ctx.fillStyle = "#facc15";
-    ctx.strokeStyle = "#ca8a04";
-    ctx.lineWidth = 1.5;
+    // ----- 1. Cañería PE (amarillo gas) -----
+    const pipeFill = "#facc15", pipeStroke = "#ca8a04";
+    ctx.fillStyle = pipeFill; ctx.strokeStyle = pipeStroke; ctx.lineWidth = 1.5;
 
-    // Caño Izquierdo
-    ctx.fillRect(cx - pipeW - 10, cy - pipeH/2, pipeW, pipeH);
-    ctx.strokeRect(cx - pipeW - 10, cy - pipeH/2, pipeW, pipeH);
+    // Caño izquierdo
+    ctx.fillRect(cx - pipeW - 10, top, pipeW, pipeH);
+    ctx.strokeRect(cx - pipeW - 10, top, pipeW, pipeH);
 
-    // Caño Derecho
-    if (currentStep === 0 && hasFailure) {
-      // Corte oblicuo
+    // Caño derecho (según falla)
+    const shortIns = (step === 3 && fail);
+    const misaligned = (step === 4 && fail);
+    const premature = (step === LAST && fail);
+    const rightX = cx + 10 + (shortIns ? 55 : 0);
+
+    if (step === 0 && fail) {
       ctx.beginPath();
-      ctx.moveTo(cx + 10, cy - pipeH/2);
-      ctx.lineTo(cx + pipeW + 10, cy - pipeH/2);
-      ctx.lineTo(cx + pipeW + 10, cy + pipeH/2);
-      ctx.lineTo(cx + 45, cy + pipeH/2);
+      ctx.moveTo(cx + 10, top);
+      ctx.lineTo(cx + pipeW + 10, top);
+      ctx.lineTo(cx + pipeW + 10, bot);
+      ctx.lineTo(cx + 45, bot);
       ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    } else if (currentStep >= 4 && hasFailure && currentStep === 4) {
-      // Caño derecho desalineado angularmente
+      ctx.fill(); ctx.stroke();
+    } else if (misaligned || premature) {
       ctx.save();
       ctx.translate(cx + 10, cy);
-      ctx.rotate(0.08);
-      ctx.fillRect(0, -pipeH/2, pipeW, pipeH);
-      ctx.strokeRect(0, -pipeH/2, pipeW, pipeH);
+      ctx.rotate(misaligned ? 0.08 : 0.11);
+      ctx.fillRect(0, -pipeH / 2, pipeW, pipeH);
+      ctx.strokeRect(0, -pipeH / 2, pipeW, pipeH);
       ctx.restore();
     } else {
-      ctx.fillRect(cx + 10, cy - pipeH/2, pipeW, pipeH);
-      ctx.strokeRect(cx + 10, cy - pipeH/2, pipeW, pipeH);
+      ctx.fillRect(rightX, top, pipeW - (shortIns ? 55 : 0), pipeH);
+      ctx.strokeRect(rightX, top, pipeW - (shortIns ? 55 : 0), pipeH);
     }
 
-    // 2. Marcas de inserción / raspado
-    if (currentStep >= 1 && currentStep <= 4) {
-      ctx.strokeStyle = (hasFailure && currentStep === 1) ? "rgba(0,0,0,0)" : "#0284c7";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      for(let i = -75; i < -15; i += 10) {
-        ctx.moveTo(cx + i, cy - pipeH/2 - 4);
-        ctx.lineTo(cx + i, cy - pipeH/2 + 6);
+    // Escuadra de 90° en el corte correcto
+    if (step === 0 && !fail) {
+      ctx.strokeStyle = "#16a34a"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx + 10, bot + 14); ctx.lineTo(cx + 10, bot + 28); ctx.lineTo(cx + 24, bot + 28); ctx.stroke();
+      ctx.fillStyle = "#16a34a"; ctx.font = "600 12px system-ui";
+      ctx.fillText("90°", cx + 28, bot + 26);
+    }
+    if (step === 0 && fail) {
+      ctx.fillStyle = "#dc2626"; ctx.font = "600 12px system-ui";
+      ctx.fillText("≠ 90°  (corte oblicuo)", cx + 55, bot + 26);
+    }
+
+    // ----- 2. Marcado, raspado y limpieza (pasos 1 a 4) -----
+    if (step >= 1 && step <= 4) {
+      const zones = [[cx - 120, cx - 10], [cx + 10, cx + 120]];
+      if (step === 1) {
+        zones.forEach(([x0, x1]) => {
+          if (fail) {                                // capa oxidada sin raspar
+            ctx.fillStyle = "rgba(120,72,20,0.55)";
+            ctx.fillRect(x0, top, x1 - x0, pipeH);
+          } else {                                   // raspado limpio
+            ctx.strokeStyle = "rgba(161,98,7,0.55)"; ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let x = x0 + 4; x < x1; x += 7) { ctx.moveTo(x, top + 3); ctx.lineTo(x - 5, bot - 3); }
+            ctx.stroke();
+          }
+        });
       }
-      ctx.stroke();
-      
-      // Línea testigo de penetración
-      ctx.strokeStyle = "#dc2626";
-      ctx.setLineDash([4, 2]);
+      if (step === 2) {
+        zones.forEach(([x0, x1]) => {
+          if (fail) {                                // suciedad / grasa
+            ctx.fillStyle = "rgba(55,40,20,0.75)";
+            specks.forEach(p => { ctx.beginPath(); ctx.arc(x0 + p.x * (x1 - x0), top + 4 + p.y * (pipeH - 8), p.s, 0, Math.PI * 2); ctx.fill(); });
+          } else {                                   // limpieza con brillo
+            ctx.strokeStyle = "rgba(255,255,255,0.8)"; ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let y = top + 10; y < bot; y += 14) { ctx.moveTo(x0 + 8, y); ctx.lineTo(x1 - 8, y); }
+            ctx.stroke();
+          }
+        });
+      }
+
+      // Marca de raspado y línea testigo de inserción
+      ctx.strokeStyle = "#0284c7"; ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(cx - 85, cy - pipeH/2 - 12);
-      ctx.lineTo(cx - 85, cy + pipeH/2 + 12);
+      for (let i = -75; i < -15; i += 10) { ctx.moveTo(cx + i, top - 4); ctx.lineTo(cx + i, top + 6); }
       ctx.stroke();
+
+      ctx.strokeStyle = "#dc2626"; ctx.lineWidth = 2;
+      ctx.setLineDash([4, 2]);
+      ctx.beginPath(); ctx.moveTo(cx - 105, top - 12); ctx.lineTo(cx - 105, bot + 12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx + 105, top - 12); ctx.lineTo(cx + 105, bot + 12); ctx.stroke();
       ctx.setLineDash([]);
+      ctx.fillStyle = "#dc2626"; ctx.font = "600 11px system-ui";
+      ctx.fillText("línea testigo", cx - 135, top - 18);
     }
 
-    // 3. Cupla de PE
-    if (currentStep >= 3) {
-      ctx.fillStyle = "#1e293b"; // Polietileno negro
-      ctx.fillRect(cx - couplerW/2, cy - couplerH/2, couplerW, couplerH);
+    // ----- 3. Cupla de PE en corte longitudinal (desde paso 3) -----
+    if (step >= 3) {
+      // Color de la cupla: se calienta en fusión y se enfría en el tiempo de espera
+      let heat = 0;
+      if (step === 5) heat = fusionProgress * 0.9;
+      if (step === LAST) heat = (1 - coolProgress()) * 0.9;
+      const bodyColor = mix([30, 41, 59], [194, 65, 12], heat);
 
-      // Bornes de conexión superiores
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(cx - couplerW / 2, cy - couplerH / 2, couplerW, wall);   // pared superior
+      ctx.fillRect(cx - couplerW / 2, bot, couplerW, wall);                 // pared inferior
+      ctx.fillRect(cx - 8, top, 16, 6);                                     // tope central
+      ctx.fillRect(cx - 8, bot - 6, 16, 6);
+
+      // Bornes y cables
       ctx.fillStyle = "#475569";
-      ctx.fillRect(cx - 55, cy - couplerH/2 - 18, 14, 18);
-      ctx.fillRect(cx + 41, cy - couplerH/2 - 18, 14, 18);
-
-      // Pines Testigos
-      const pinLift = (currentStep >= 5) ? fusionProgress * 9 : 0;
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(cx - 28, cy - couplerH/2 - 5 - pinLift, 7, 10);
-      ctx.fillRect(cx + 21, cy - couplerH/2 - 5 - pinLift, 7, 10);
-
-      // Espiras de cobre
-      const coilColor = (currentStep === 5) ? `rgb(255, ${Math.floor(100 + 155*fusionProgress)}, 0)` : "#38bdf8";
-      ctx.fillStyle = coilColor;
-      
-      [-75, -65, -55, -45, -35, 35, 45, 55, 65, 75].forEach(offset => {
+      ctx.fillRect(cx - 55, cy - couplerH / 2 - 18, 14, 18);
+      ctx.fillRect(cx + 41, cy - couplerH / 2 - 18, 14, 18);
+      if (step === 5) {
+        ctx.strokeStyle = "#334155"; ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(cx + offset, cy - pipeH/2 - 5, 2.8, 0, Math.PI*2);
-        ctx.arc(cx + offset, cy + pipeH/2 + 5, 2.8, 0, Math.PI*2);
-        ctx.fill();
+        ctx.moveTo(cx - 48, cy - couplerH / 2 - 18); ctx.lineTo(cx - 48, 52); ctx.lineTo(cx - 30, 40);
+        ctx.moveTo(cx + 48, cy - couplerH / 2 - 18); ctx.lineTo(cx + 48, 52); ctx.lineTo(cx + 30, 40);
+        ctx.stroke();
+        ctx.fillStyle = "#e2e8f0"; ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 1.5;
+        ctx.fillRect(cx - 62, 14, 124, 28); ctx.strokeRect(cx - 62, 14, 124, 28);
+        ctx.fillStyle = "#334155"; ctx.font = "700 11px system-ui"; ctx.textAlign = "center";
+        ctx.fillText(fail ? "CICLO YA EJECUTADO" : "EQUIPO DE FUSIÓN", cx, 32);
+        ctx.textAlign = "left";
+      }
+
+      // Testigos de fusión (se levantan en la fusión y permanecen arriba al enfriar)
+      const pinLift = (step === 5 && fail) ? 9 : (step >= 5 ? fusionProgress * 9 : 0);
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(cx - 28, cy - couplerH / 2 - 5 - pinLift, 7, 10);
+      ctx.fillRect(cx + 21, cy - couplerH / 2 - 5 - pinLift, 7, 10);
+
+      // Espiras calefactoras (dentro de la pared, a ±(pipeH/2+10))
+      const coilY = [top - wall / 2, bot + wall / 2];
+      let coilColor = "#38bdf8";
+      if (step === 5) coilColor = `rgb(255,${Math.floor(100 + 155 * fusionProgress)},0)`;
+      else if (step === LAST) coilColor = mix([56, 189, 248], [255, 150, 0], 1 - coolProgress());
+      ctx.fillStyle = coilColor;
+      [-75, -65, -55, -45, -35, 35, 45, 55, 65, 75].forEach(off => {
+        coilY.forEach(y => { ctx.beginPath(); ctx.arc(cx + off, y, 2.8, 0, Math.PI * 2); ctx.fill(); });
       });
 
-      // Zona plástica de fundición
-      if (currentStep === 5 && fusionProgress > 0.25) {
-        ctx.fillStyle = `rgba(234, 88, 12, ${fusionProgress * 0.75})`;
-        ctx.fillRect(cx - 80, cy - pipeH/2 - 2, 50, 4);
-        ctx.fillRect(cx + 30, cy - pipeH/2 - 2, 50, 4);
+      // Zona fundida
+      if (step === 5 && fusionProgress > 0.25) {
+        ctx.fillStyle = `rgba(234,88,12,${fusionProgress * 0.75})`;
+        [[-80, 50], [30, 50]].forEach(([o, w]) => {
+          ctx.fillRect(cx + o, top - 3, w, 6);
+          ctx.fillRect(cx + o, bot - 3, w, 6);
+        });
       }
 
-      // 4. Mordazas de alineación (Paso 4 en adelante si no hay falla)
-      if (currentStep >= 4 && !(currentStep === 4 && hasFailure)) {
-        ctx.fillStyle = "rgba(100, 116, 139, 0.85)";
-        ctx.fillRect(cx - couplerW/2 - 32, cy - couplerH/2 - 14, 24, couplerH + 28);
-        ctx.fillRect(cx + couplerW/2 + 8, cy - couplerH/2 - 14, 24, couplerH + 28);
+      // Falla: cupla quemada por segundo ciclo
+      if (step === 5 && fail) {
+        ctx.fillStyle = "rgba(15,15,15,0.55)";
+        for (let i = 0; i < 6; i++) {
+          ctx.beginPath(); ctx.arc(cx - 70 + i * 28, top - 10 - (i % 2) * 6, 7 + (i % 3) * 2, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.fillStyle = "#dc2626"; ctx.font = "700 12px system-ui"; ctx.textAlign = "center";
+        ctx.fillText("PIEZA INUTILIZADA: NO RECALENTAR", cx, H - 20);
+        ctx.textAlign = "left";
       }
+
+      // Falla: inserción corta, mostrar tramo sin tubería
+      if (shortIns) {
+        ctx.fillStyle = "rgba(220,38,38,0.18)";
+        ctx.fillRect(cx + 10, top, 55, pipeH);
+        ctx.fillStyle = "#dc2626"; ctx.font = "700 11px system-ui"; ctx.textAlign = "center";
+        ctx.fillText("sin llegar al tope", cx + 37, cy + 4);
+        ctx.textAlign = "left";
+      }
+
+      // Falla: cupla sin mordaza se desalinea (marcador)
+      if (misaligned) {
+        ctx.fillStyle = "#dc2626"; ctx.font = "700 11px system-ui"; ctx.textAlign = "center";
+        ctx.fillText("DESALINEACIÓN / SIN ALINEADOR", cx, H - 20);
+        ctx.textAlign = "left";
+      }
+
+      // Falla: desmolde prematuro, grietas
+      if (premature) {
+        ctx.strokeStyle = "#dc2626"; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + 58, top - 2); ctx.lineTo(cx + 66, top + 14); ctx.lineTo(cx + 60, top + 24);
+        ctx.moveTo(cx - 58, bot + 2); ctx.lineTo(cx - 66, bot - 14); ctx.lineTo(cx - 60, bot - 24);
+        ctx.stroke();
+        ctx.fillStyle = "#dc2626"; ctx.font = "700 11px system-ui"; ctx.textAlign = "center";
+        ctx.fillText("MORDAZAS RETIRADAS ANTES DE TIEMPO", cx, H - 20);
+        ctx.textAlign = "left";
+      }
+
+      // ----- 4. Mordazas de alineación (paso 8 y 9 en adelante) -----
+      const showClamps = step >= 4 && !misaligned && !clampsRemoved;
+      if (showClamps) {
+        ctx.fillStyle = "rgba(100,116,139,0.85)";
+        ctx.fillRect(cx - couplerW / 2 - 32, cy - couplerH / 2 - 14, 24, couplerH + 28);
+        ctx.fillRect(cx + couplerW / 2 + 8, cy - couplerH / 2 - 14, 24, couplerH + 28);
+        ctx.fillStyle = "#64748b"; ctx.font = "600 10px system-ui"; ctx.textAlign = "center";
+        ctx.fillText("MORDAZA", cx - couplerW / 2 - 20, cy + couplerH / 2 + 26);
+        ctx.fillText("MORDAZA", cx + couplerW / 2 + 20, cy + couplerH / 2 + 26);
+        ctx.textAlign = "left";
+      }
+      if (step === LAST && clampsRemoved && !fail) {
+        ctx.fillStyle = "#16a34a"; ctx.font = "700 12px system-ui"; ctx.textAlign = "center";
+        ctx.fillText("✔ UNIÓN COMPLETADA", cx, H - 20);
+        ctx.textAlign = "left";
+      }
+
+      // ----- 5. Zonas (ZF / ZC) bajo la cupla -----
+      const zy = cy + couplerH / 2 + 8;
+      const zones = [[-105, -75, "ZF"], [-75, -35, "ZC"], [-35, 35, "ZF"], [35, 75, "ZC"], [75, 105, "ZF"]];
+      ctx.font = "700 10px system-ui"; ctx.textAlign = "center";
+      zones.forEach(([a, b, t]) => {
+        ctx.strokeStyle = t === "ZC" ? "#ea580c" : "#0284c7";
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx + a + 2, zy); ctx.lineTo(cx + b - 2, zy); ctx.stroke();
+        ctx.fillText(t, cx + (a + b) / 2, zy + 13);
+      });
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#64748b"; ctx.font = "600 10px system-ui";
+      ctx.fillText("ZF = zona fría   ZC = zona caliente (espiras)", cx - 108, zy + 28);
     }
 
-    // 5. Rótulo técnico en Canvas
+    // Rótulo técnico
     ctx.fillStyle = "#64748b";
     ctx.font = "600 11px system-ui";
     ctx.fillText("CORTE LONGITUDINAL INTERNO", 18, 25);
-    
-    if(currentStep >= 3) {
-      ctx.fillStyle = "#0284c7";
-      ctx.fillText("[ZF] ZONA FRÍA", cx - 95, cy + couplerH/2 + 25);
-      ctx.fillText("[ZC] ZONA CALIENTE", cx - 10, cy + couplerH/2 + 25);
-      ctx.fillText("[ZF] ZONA FRÍA", cx + 75, cy + couplerH/2 + 25);
-    }
   }
 
+  /* ---------- Modo evaluación ---------- */
+  const QUESTIONS = [
+    {
+      q: "¿Cómo debe ser el corte de los extremos de la tubería antes de la unión?",
+      opts: ["Perpendicular (90°) al eje de la tubería", "Con un ángulo de unos 45° para aumentar la superficie", "Indistinto, el accesorio compensa la diferencia", "Con sierra común y sin rebabado"],
+      correct: 0,
+      why: "El corte a 90° asegura el asentamiento parejo contra el tope central. Un corte oblicuo deja holguras y el material fundido puede obturar el conducto."
+    },
+    {
+      q: "¿Para qué se raspa la superficie de la tubería en la zona de soldadura?",
+      opts: ["Para dejar una terminación estética", "Para retirar la capa oxidada por intemperie/UV y exponer polietileno limpio", "Para que el caño entre más fácil en la cupla", "No es necesario si el caño es nuevo y está limpio"],
+      correct: 1,
+      why: "La capa oxidada impide la coalescencia molecular entre caño y accesorio. Se retira con raspador (aprox. 0,2 mm) en todo el perímetro, nunca con lija o abrasivos."
+    },
+    {
+      q: "Después del raspado, ¿cómo se limpia la superficie?",
+      opts: ["Con un trapo húmedo con agua", "Con nafta o thinner", "Con alcohol isopropílico y un paño limpio, sin volver a tocar con las manos", "No se limpia: el raspado ya la deja lista"],
+      correct: 2,
+      why: "El desengrasado se hace con alcohol isopropílico (o toallitas aprobadas). Los solventes no permitidos y el contacto con las manos dejan contaminantes que producen ampollas y falta de hermeticidad."
+    },
+    {
+      q: "¿Para qué sirve la línea testigo de inserción?",
+      opts: ["Para indicar el sentido del flujo del gas", "Para verificar que la tubería llegó a la profundidad correcta dentro de la cupla", "Para identificar el diámetro del caño", "Para saber dónde cortar la tubería"],
+      correct: 1,
+      why: "Permite comprobar que la cupla quedó centrada y la tubería insertada hasta el tope, de modo que las espiras queden bien cubiertas."
+    },
+    {
+      q: "¿Cuál es la función del alineador / mordazas durante la fusión y el enfriamiento?",
+      opts: ["Calentar la cupla más rápido", "Mantener la alineación y absorber tensiones, corrigiendo ovalizaciones", "Reemplazar el tiempo de enfriamiento", "Es opcional si la tubería es corta"],
+      correct: 1,
+      why: "Es obligatorio. Sin alineador el peso y la curvatura de la tubería desalinean la unión mientras el material está blando."
+    },
+    {
+      q: "Un ciclo de fusión se interrumpió. ¿Qué indica la NAG-140?",
+      opts: ["Reenergizar la misma cupla de inmediato", "Esperar a que enfríe y repetir el ciclo", "No recalentar nunca la pieza: se debe inutilizar y rehacer la unión con otro accesorio", "Ajustar manualmente el tiempo y continuar"],
+      correct: 2,
+      why: "Una pieza con un ciclo ya ejecutado o interrumpido nunca debe recalentarse; se descarta y se rehace la unión."
+    },
+    {
+      q: "¿Qué función cumplen las Zonas Frías (ZF) de la cupla?",
+      opts: ["Son las zonas donde se conectan los bornes", "Contener el polietileno fundido y sellar los extremos de la zona de fusión", "Disipar el calor de la fuente eléctrica", "Marcar el diámetro del accesorio"],
+      correct: 1,
+      why: "Sin espiras en esos tramos el material no funde, por lo que actúan como sellos que confinan el polietileno fundido de la zona caliente."
+    },
+    {
+      q: "Los testigos de fusión se elevaron. ¿Qué significa?",
+      opts: ["Que la unión ya puede ponerse en servicio", "Que no hace falta respetar el tiempo de enfriamiento", "Que el accesorio recibió energía y el material alcanzó presión de fusión; igual hay que respetar el enfriamiento", "Que el ciclo debe repetirse"],
+      correct: 2,
+      why: "Son una indicación visual complementaria. No reemplazan el cooling time ni el control del ciclo en el equipo."
+    },
+    {
+      q: "¿Cuándo se pueden retirar las mordazas y mover la cañería?",
+      opts: ["Apenas termina el ciclo de calentamiento", "Cuando el indicador se levantó", "Una vez cumplido el tiempo de enfriamiento indicado en el accesorio", "A los 30 segundos, sea cual sea el diámetro"],
+      correct: 2,
+      why: "Mover o someter a esfuerzos la pieza tibia rompe los enlaces cristalinos antes de que el polietileno complete su solidificación."
+    },
+    {
+      q: "¿Cómo se determina el tiempo de fusión y de enfriamiento?",
+      opts: ["Lo decide el operario según su experiencia", "Es siempre el mismo para cualquier diámetro", "Se toma de los datos del accesorio (etiqueta / código de barras) y del manual del fabricante", "Se calcula según el color de la tubería"],
+      correct: 2,
+      why: "Los parámetros vienen codificados en el accesorio y se leen con el equipo; el operario no debe modificarlos arbitrariamente."
+    }
+  ];
+
+  let quiz = null;
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function openQuiz() {
+    quiz = {
+      items: shuffle(QUESTIONS.map(q => {
+        const order = shuffle(q.opts.map((t, i) => i));
+        return { q: q.q, why: q.why, opts: order.map(i => q.opts[i]), correct: order.indexOf(q.correct) };
+      })).slice(0, 8),
+      i: 0, score: 0, answered: false, log: []
+    };
+    $('quizOverlay').classList.add('open');
+    renderQuiz();
+  }
+  function closeQuiz() { $('quizOverlay').classList.remove('open'); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeQuiz(); });
+
+  function esc(s) { return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  function renderQuiz() {
+    const body = $('quizBody');
+    if (quiz.i >= quiz.items.length) {
+      const n = quiz.items.length, pct = Math.round(quiz.score / n * 100);
+      const msg = pct >= 80 ? "¡Excelente! Dominás los puntos críticos." : pct >= 60 ? "Bien, repasá los puntos que fallaste." : "Conviene repasar el procedimiento paso a paso.";
+      body.innerHTML = `<div class="score-big">${quiz.score} / ${n}</div><div class="score-msg">${msg}</div>` +
+        quiz.log.map(l => `<div class="review-item"><b class="${l.ok ? 'ok' : 'bad'}">${l.ok ? '✔' : '✘'}</b> ${esc(l.q)}${l.ok ? '' : '<br><i>' + esc(l.why) + '</i>'}</div>`).join('') +
+        `<div class="timer-row" style="margin-top:14px"><button class="small primary" onclick="openQuiz()">Repetir evaluación</button><button class="small" onclick="closeQuiz()">Cerrar</button></div>`;
+      return;
+    }
+    const it = quiz.items[quiz.i];
+    body.innerHTML = `<div class="q-meta">Pregunta ${quiz.i + 1} de ${quiz.items.length}</div>
+      <div class="q-text">${esc(it.q)}</div>` +
+      it.opts.map((o, k) => `<button class="opt" data-k="${k}" onclick="answerQuiz(${k})">${esc(o)}</button>`).join('') +
+      `<div id="quizFeedback"></div>`;
+  }
+
+  function answerQuiz(k) {
+    if (quiz.answered) return;
+    quiz.answered = true;
+    const it = quiz.items[quiz.i];
+    const ok = k === it.correct;
+    if (ok) quiz.score++;
+    quiz.log.push({ q: it.q, ok, why: it.why });
+    document.querySelectorAll('#quizBody .opt').forEach(b => {
+      const i = +b.dataset.k;
+      b.disabled = true;
+      if (i === it.correct) b.classList.add('correct');
+      else if (i === k) b.classList.add('wrong');
+    });
+    const last = quiz.i === quiz.items.length - 1;
+    $('quizFeedback').innerHTML = `<div class="explain ${ok ? 'ok' : 'bad'}"><b>${ok ? '¡Correcto!' : 'Incorrecto.'}</b> ${esc(it.why)}</div>
+      <button class="small primary" style="width:100%" onclick="nextQuiz()">${last ? 'Ver resultado' : 'Siguiente pregunta'}</button>`;
+  }
+
+  function nextQuiz() { quiz.i++; quiz.answered = false; renderQuiz(); }
+
+  /* ---------- Inicio ---------- */
+  resetStepState();
   updateUI();
+  setupCanvas();
 </script>
 </body>
 </html>
