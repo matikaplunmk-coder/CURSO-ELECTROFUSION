@@ -263,12 +263,62 @@
     .review-item b.ok { color: var(--verde); }
     .review-item b.bad { color: var(--rojo-alerta); }
 
+
+    /* Pestañas de modo */
+    .tabs { display: flex; gap: 4px; background: var(--blanco); padding: 0 24px; border-bottom: 1px solid var(--gris-borde); overflow-x: auto; }
+    .tab {
+      background: none; border: none; border-bottom: 3px solid transparent;
+      padding: 11px 14px; font-size: 0.9rem; font-weight: 600;
+      color: var(--texto-secundario); cursor: pointer; white-space: nowrap;
+    }
+    .tab:hover { color: var(--celeste-primario); }
+    .tab.active { color: var(--celeste-primario); border-bottom-color: var(--celeste-primario); }
+    .pane { display: flex; flex-direction: column; gap: 16px; flex: 1; }
+
+    /* Modo parámetros */
+    .ctl-group { margin-bottom: 14px; }
+    .ctl-group:last-child { margin-bottom: 0; }
+    .ctl-label { font-size: 0.78rem; font-weight: 700; color: var(--texto-oscuro); margin-bottom: 6px; display: flex; justify-content: space-between; gap: 8px; }
+    .ctl-label span { font-weight: 500; color: var(--texto-secundario); }
+    .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+    .seg button {
+      flex: 1 1 auto; min-width: 90px;
+      padding: 8px 10px; border: 1.5px solid var(--gris-borde); border-radius: 8px;
+      background: var(--blanco); color: var(--texto-oscuro);
+      font-size: 0.8rem; font-weight: 600; line-height: 1.25; cursor: pointer;
+    }
+    .seg button:hover:not(:disabled) { border-color: var(--celeste-primario); background: var(--celeste-claro); }
+    .seg button.on { border-color: var(--celeste-primario); background: var(--celeste-primario); color: var(--blanco); }
+    .seg button.on.warn { border-color: var(--rojo-alerta); background: var(--rojo-alerta); }
+    .seg button:disabled { opacity: .5; cursor: not-allowed; }
+    .ctl-note { font-size: 0.76rem; color: var(--texto-secundario); line-height: 1.4; margin-top: 6px; }
+
+    .meter { position: relative; height: 12px; border-radius: 8px; margin: 8px 0 4px;
+      background: linear-gradient(90deg, #93c5fd 0%, #93c5fd 36%, #86efac 36%, #86efac 56%, #fdba74 56%, #fdba74 80%, #f87171 80%, #f87171 100%); }
+    .meter i { position: absolute; top: -4px; width: 4px; height: 20px; border-radius: 2px; background: var(--texto-oscuro); transform: translateX(-2px); transition: left .3s; }
+    .meter-scale { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--texto-secundario); }
+    .formula { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 0.85rem; background: var(--gris-fondo); border: 1px solid var(--gris-borde); border-radius: 8px; padding: 10px; line-height: 1.6; overflow-x: auto; }
+    .formula b { color: var(--celeste-primario); }
+    .phys p { margin-bottom: 8px; }
+    .phys p:last-child { margin-bottom: 0; }
+    .phys strong { color: var(--texto-oscuro); }
+    .verdict { border-left-width: 5px; }
+    .verdict.ok { border-left-color: var(--verde); background: var(--verde-fondo); }
+    .verdict.ok .step-indicator { color: var(--verde); }
+    .verdict.bad { border-left-color: var(--rojo-alerta); background: var(--rojo-fondo); }
+    .verdict.bad .step-indicator, .verdict.bad h3 { color: var(--rojo-alerta); }
+    .verdict.cold { border-left-color: #2563eb; background: #eff6ff; }
+    .verdict.cold .step-indicator, .verdict.cold h3 { color: #1d4ed8; }
+    .block-banner { display: none; background: #7f1d1d; color: #fff; border-radius: 10px; padding: 14px; font-size: 0.88rem; line-height: 1.45; }
+    .block-banner b { display: block; font-size: 0.95rem; margin-bottom: 4px; letter-spacing: .02em; }
+
     /* Tablets y celulares */
     @media (max-width: 860px) {
       .main-container { flex-direction: column; }
       .viewport { padding: 12px; flex: none; }
       .panel { border-left: none; border-top: 1px solid var(--gris-borde); padding: 16px; min-width: 0; overflow: visible; }
       header { padding: 12px 16px; }
+      .tabs { padding: 0 8px; }
       header h1 { font-size: 1.05rem; }
       .timer-display { font-size: 2.2rem; }
     }
@@ -283,7 +333,11 @@
     <button class="btn-quiz" onclick="openQuiz()">Modo evaluación</button>
   </div>
 </header>
-<div class="progress"><div id="progressBar"></div></div>
+<nav class="tabs" role="tablist">
+  <button class="tab active" id="tabProc" role="tab" onclick="setMode('proc')">Procedimiento paso a paso</button>
+  <button class="tab" id="tabParams" role="tab" onclick="setMode('params')">Parámetros eléctricos y máquina</button>
+</nav>
+<div class="progress" id="progressWrap"><div id="progressBar"></div></div>
 
 <div class="main-container">
   <div class="viewport">
@@ -291,6 +345,7 @@
   </div>
 
   <div class="panel">
+    <div class="pane" id="panelProc">
     <div class="card">
       <div class="step-indicator" id="stepBadge"></div>
       <h3 id="stepTitle"></h3>
@@ -333,6 +388,59 @@
         <button class="nav-btn btn-next" id="nextBtn" onclick="nextStep()">Siguiente</button>
       </div>
       <p class="disclaimer">Material de capacitación. En obra rigen la NAG-140 vigente y el manual del fabricante.</p>
+    </div>
+    </div>
+
+    <div class="pane" id="panelParams" style="display:none">
+      <div class="card">
+        <div class="step-indicator">Simulador de parámetros</div>
+        <h3>Casos de parámetros eléctricos y máquina manual</h3>
+        <p>Combiná las variables y observá qué pasa dentro de la unión. Modelo didáctico simplificado.</p>
+      </div>
+
+      <div class="card">
+        <div class="ctl-group">
+          <div class="ctl-label">Tipo de máquina</div>
+          <div class="seg" id="segMachine"></div>
+          <div class="ctl-note" id="machineNote"></div>
+        </div>
+        <div class="ctl-group">
+          <div class="ctl-label">Tensión de salida <span id="vVal"></span></div>
+          <div class="seg" id="segVolt"></div>
+        </div>
+        <div class="ctl-group">
+          <div class="ctl-label">Tiempo de fusión <span id="tVal"></span></div>
+          <div class="seg" id="segTime"></div>
+        </div>
+        <div class="ctl-group">
+          <div class="ctl-label">Estado del ciclo</div>
+          <div class="seg" id="segCycle"></div>
+        </div>
+        <div class="ctl-group">
+          <div class="ctl-label">Temperatura ambiente</div>
+          <div class="seg" id="segTemp"></div>
+        </div>
+      </div>
+
+      <div class="block-banner" id="blockBanner">
+        <b>⛔ FUSIÓN BLOQUEADA – NAG-140</b>
+        Un accesorio que ya recibió un ciclo de fusión no puede recalentarse. La pieza debe inutilizarse (entalladura de aproximadamente el 50 % del espesor) y la unión se rehace con un accesorio nuevo.
+      </div>
+
+      <div class="card verdict" id="verdictCard">
+        <div class="step-indicator" id="verdictBadge"></div>
+        <h3 id="verdictTitle"></h3>
+        <p id="verdictDesc"></p>
+        <div class="meter"><i id="meterMark"></i></div>
+        <div class="meter-scale"><span>fría</span><span>correcta</span><span>sobrefusión</span><span>severa</span></div>
+      </div>
+
+      <div class="card">
+        <div class="step-indicator">Física del caso</div>
+        <div class="formula" id="formulaBox"></div>
+        <div class="phys" style="margin-top:10px" id="physBox"></div>
+      </div>
+      <p class="disclaimer">Modelo ilustrativo con resistencia constante y valores de ejemplo. Los límites reales los fija el fabricante del accesorio y de la máquina.</p>
     </div>
   </div>
 </div>
@@ -613,6 +721,7 @@
   }
 
   function renderScene() {
+    if (mode === 'params') { renderParams(); return; }
     ctx.clearRect(0, 0, W, H);
 
     const cx = W / 2, cy = 190;
@@ -851,6 +960,336 @@
     ctx.fillStyle = "#64748b";
     ctx.font = "600 11px system-ui";
     ctx.fillText("CORTE LONGITUDINAL INTERNO", 18, 25);
+  }
+
+  /* ---------- Modo: parámetros eléctricos y máquina ---------- */
+  let mode = 'proc';
+  const V_NOM = 40, T_NOM = 60, R_EJ = 2;          // valores didácticos de ejemplo
+  const E_NOM = V_NOM * V_NOM * T_NOM / R_EJ;      // 48 000 J
+
+  const OPT = {
+    machine: [
+      { k: 'auto', label: 'Automática con código de barras' },
+      { k: 'manual', label: 'Manual' }
+    ],
+    volt: [
+      { k: 'nom', label: 'Nominal', sub: '39,5–40 V', v: 40 },
+      { k: 'over', label: 'Sobretensión', sub: '48 V · picos de generador', v: 48, warn: true },
+      { k: 'under', label: 'Subtensión', sub: '~30 V · caída por alargues', v: 30, warn: true }
+    ],
+    time: [
+      { k: 'nom', label: 'Nominal', sub: '60 s', t: 60 },
+      { k: 'over', label: 'Exceso', sub: '+50 % · 90 s', t: 90, warn: true },
+      { k: 'under', label: 'Insuficiente', sub: '36 s', t: 36, warn: true }
+    ],
+    cycle: [
+      { k: 'done', label: 'Completado' },
+      { k: 'interrupted', label: 'Interrumpido a mitad de tiempo', warn: true },
+      { k: 'refusion', label: 'Intento de doble fusión', warn: true }
+    ],
+    temp: [
+      { k: 'hot', label: 'Verano extremo', sub: '>38 °C', f: 1.15, txt: '>38 °C' },
+      { k: 'mild', label: 'Templado', sub: '~20 °C', f: 1, txt: '~20 °C' },
+      { k: 'cold', label: 'Invierno', sub: '<4 °C', f: 0.87, txt: '<4 °C' }
+    ]
+  };
+  const P = { machine: 'auto', volt: 'nom', time: 'nom', cycle: 'done', temp: 'mild' };
+  let paramProg = 1, paramTimer = null;
+
+  const nf = (n, d = 2) => n.toLocaleString('es-AR', { maximumFractionDigits: d });
+  const opt = (g, k) => OPT[g].find(o => o.k === k);
+
+  function classify(r) { return r < 0.8 ? 'cold' : r < 1.2 ? 'ok' : r < 1.8 ? 'over' : 'severe'; }
+  function invasion(r) { return r < 1.1 ? 0 : r < 1.8 ? (r - 1.1) / 0.7 * 8 : 8 + Math.min(1, (r - 1.8) / 0.6) * 10; }
+
+  function paramModel() {
+    const auto = P.machine === 'auto';
+    let V = opt('volt', P.volt).v, t = opt('time', P.time).t, aborted = false;
+    if (auto) {
+      t = T_NOM;                                   // el tiempo lo fija el código de barras
+      if (P.volt !== 'nom') { aborted = true; V = V_NOM; }   // alimentación fuera de rango: alarma y aborta
+    }
+    const tf = auto ? 1 : opt('temp', P.temp).f;
+    let frac = 1;
+    if (aborted) frac = 0.35;
+    if (P.cycle === 'interrupted') frac = Math.min(frac, 0.5);
+    const E = V * V * t * frac / R_EJ;
+    const refusion = P.cycle === 'refusion';
+    const rho1 = E / E_NOM * tf;
+    const rho = rho1 + (refusion ? 1 : 0);
+    return { auto, V, t, aborted, tf, frac, E, refusion, rho1, rho, cls: classify(rho), interrupted: aborted || P.cycle === 'interrupted' };
+  }
+
+  function setMode(m) {
+    mode = m;
+    $('tabProc').classList.toggle('active', m === 'proc');
+    $('tabParams').classList.toggle('active', m === 'params');
+    $('panelProc').style.display = m === 'proc' ? 'flex' : 'none';
+    $('panelParams').style.display = m === 'params' ? 'flex' : 'none';
+    $('progressWrap').style.display = m === 'proc' ? 'block' : 'none';
+    clearInterval(paramTimer); paramTimer = null;
+    if (m === 'params') {
+      stopCooling(); clearInterval(fusionTimer); fusionTimer = null;
+      buildParamsUI();
+      startParamAnim();
+    } else {
+      goToStep(currentStep);
+    }
+  }
+
+  function setParam(g, k) {
+    P[g] = k;
+    if (g === 'machine' && k === 'auto') P.time = 'nom';
+    buildParamsUI();
+    startParamAnim();
+  }
+
+  function startParamAnim() {
+    clearInterval(paramTimer);
+    paramProg = 0;
+    paramTimer = setInterval(() => {
+      paramProg = Math.min(1, paramProg + 0.03);
+      if (paramProg >= 1) { clearInterval(paramTimer); paramTimer = null; }
+      renderScene();
+    }, 40);
+    renderScene();
+  }
+
+  function segHTML(g) {
+    const auto = P.machine === 'auto';
+    return OPT[g].map(o => {
+      const locked = auto && g === 'time' && o.k !== 'nom';
+      const lockedAll = auto && g === 'time';
+      return `<button class="${P[g] === o.k ? 'on' : ''}${o.warn ? ' warn' : ''}" ${lockedAll ? 'disabled' : ''} onclick="setParam('${g}','${o.k}')">${o.label}${o.sub ? '<br><small>' + o.sub + '</small>' : ''}</button>`;
+    }).join('');
+  }
+
+  function buildParamsUI() {
+    ['machine', 'volt', 'time', 'cycle', 'temp'].forEach(g => {
+      $('seg' + g.charAt(0).toUpperCase() + g.slice(1)).innerHTML = segHTML(g);
+    });
+    const S = paramModel();
+    $('vVal').innerText = nf(S.V, 1) + ' V' + (S.aborted ? ' (aplicados: ' + opt('volt', P.volt).v + ' V)' : '');
+    $('tVal').innerText = S.t + ' s';
+    $('machineNote').innerText = S.auto
+      ? 'Lee el código de barras: tensión y tiempo se fijan solos, regula la salida y compensa la temperatura. Si la alimentación sale de rango, da alarma y aborta el ciclo.'
+      : 'El operario carga tensión y tiempo a mano: no hay lectura de código ni compensación automática por temperatura.';
+    $('blockBanner').style.display = S.refusion ? 'block' : 'none';
+
+    // Veredicto
+    const V = {
+      ok:     ['ok',   'Dentro de parámetros', 'Fusión correcta', 'La energía entregada cae dentro de la ventana del accesorio: la pileta de fusión es continua en las zonas calientes, las zonas frías la contienen y los testigos se elevan.'],
+      cold:   ['cold', 'Defecto crítico', 'Fusión fría', 'Energía insuficiente: las espiras apenas entibian el polietileno, no se forma una pileta continua y los testigos no se elevan. La unión parece terminada pero no está soldada.'],
+      over:   ['bad',  'Defecto crítico', 'Sobrefusión', 'Exceso de energía: la pileta rebasa las zonas calientes, el polietileno fundido se extruye hacia la luz interna del caño y por los testigos.'],
+      severe: ['bad',  'Defecto crítico', 'Sobrefusión severa: espiras en cortocircuito', 'El material se degrada, las espiras se tocan al reblandecerse el cuerpo (cortocircuito), los testigos son expulsados y la luz interna queda obstruida.']
+    }[S.cls];
+    let title = V[2], desc = V[3], cardCls = V[0], badge = V[1];
+    if (S.refusion) { cardCls = 'bad'; badge = 'Operación prohibida'; title = 'Refusión: pieza a inutilizar'; desc = 'El accesorio ya cumplió un ciclo; una segunda energización sobre material fundido lo degrada y expulsa polietileno (energía acumulada ' + nf(S.rho) + '× la nominal). Se simula solo con fines didácticos.'; }
+    else if (S.aborted) desc = 'La máquina detectó tensión de alimentación fuera de rango y abortó el ciclo con ' + Math.round(S.frac * 100) + ' % de la energía. ' + desc;
+    else if (S.interrupted) desc = 'El ciclo se cortó a la mitad (' + Math.round(S.frac * 100) + ' % de la energía): la pieza no puede reenergizarse y debe inutilizarse. ' + desc;
+    $('verdictCard').className = 'card verdict ' + cardCls;
+    $('verdictBadge').innerText = badge;
+    $('verdictTitle').innerText = title;
+    $('verdictDesc').innerText = desc;
+    $('meterMark').style.left = Math.min(100, Math.max(0, S.rho / 2.4 * 100)) + '%';
+
+    // Física
+    const lines = ['E = V² · t / R'];
+    lines.push(`E = ${nf(S.V, 1)}² · ${S.t} s${S.frac < 1 ? ' · ' + Math.round(S.frac * 100) + ' %' : ''} / ${R_EJ} Ω = <b>${nf(S.E / 1000, 1)} kJ</b>`);
+    lines.push(`E nominal = ${V_NOM}² · ${T_NOM} / ${R_EJ} = ${nf(E_NOM / 1000, 0)} kJ`);
+    let r = `E / E<sub>nom</sub> = ${nf(S.E / E_NOM)}`;
+    if (S.tf !== 1) r += ` × ${nf(S.tf)} (temp.)`;
+    if (S.refusion) r += ` + 1,00 (ciclo previo)`;
+    lines.push(r + ` = <b>${nf(S.rho)}</b>`);
+    $('formulaBox').innerHTML = lines.join('<br>');
+
+    const ph = [];
+    ph.push('<p><strong>Energía.</strong> El calor depende del cuadrado de la tensión: +20 % de tensión (48 V) entrega +44 % de energía, y 30 V solo el 56 %. Por eso un generador con picos o un alargue largo desvían la fusión más que el tiempo.</p>');
+    ph.push({
+      ok: '<p><strong>Zonas frías.</strong> No tienen espiras, no funden y actúan como sello: mantienen el polietileno fundido y la presión de fusión dentro de la zona caliente.</p>',
+      cold: '<p><strong>Zonas frías.</strong> Quedan intactas, pero la zona caliente no alcanza temperatura ni presión de fusión: no hay soldadura continua que contener.</p>',
+      over: '<p><strong>Zonas frías.</strong> El calor se conduce más allá de las espiras: las ZF se calientan y pierden su función de contención. El fundido escapa por los extremos y hacia la luz del caño.</p>',
+      severe: '<p><strong>Zonas frías.</strong> Colapsan por completo: el fundido ya no está confinado, se extruye por los extremos y los testigos, y reduce el diámetro útil del caño.</p>'
+    }[S.cls]);
+    ph.push({
+      ok: '<p><strong>Riesgo en la red.</strong> Unión homogénea con el caño, apta para la presión de servicio tras el enfriamiento y los controles.</p>',
+      cold: '<p><strong>Riesgo en la red.</strong> Falla latente: pasa la inspección visual y puede aguantar la prueba inicial, pero se desprende con presión, ciclos térmicos o esfuerzos del terreno y genera una fuga de gas.</p>',
+      over: '<p><strong>Riesgo en la red.</strong> Sección de paso reducida, tensiones residuales y material degradado: foco de fisura y fuga.</p>',
+      severe: '<p><strong>Riesgo en la red.</strong> Luz obstruida, espiras en corto y material degradado: riesgo de fuga y de falla prematura. La unión debe cortarse y rehacerse.</p>'
+    }[S.cls]);
+    if (S.refusion) ph.push('<p><strong>Prohibición NAG-140.</strong> Un segundo ciclo sobre material ya fundido no puede verificarse ni garantizarse. La pieza se inutiliza (entalladura de ~50 % del espesor) y se reemplaza.</p>');
+    if (S.auto) ph.push('<p><strong>Máquina automática.</strong> Aplica la tensión y el tiempo del código y compensa la temperatura; ante alimentación inestable aborta en lugar de entregar una energía incorrecta.</p>');
+    else {
+      let m = '<p><strong>Máquina manual.</strong> Todo depende del operario: un error de carga o de lectura se traslada directo a la energía.';
+      if (P.temp === 'hot') m += ' Con más de 38 °C el accesorio parte caliente y la misma energía funde más (×1,15 en este modelo).';
+      if (P.temp === 'cold') m += ' Con menos de 4 °C hace falta más energía y la misma carga queda corta (×0,87 en este modelo).';
+      ph.push(m + '</p>');
+    }
+    $('physBox').innerHTML = ph.join('');
+  }
+
+  function renderParams() {
+    const S = paramModel();
+    const rv = S.rho * paramProg;
+    const k = classify(rv);
+    const cx = W / 2, cy = 190, pipeW = 190, pipeH = 65, couplerW = 210, couplerH = 105;
+    const wall = (couplerH - pipeH) / 2, top = cy - pipeH / 2, bot = cy + pipeH / 2;
+    const boreT = top + 10, boreB = bot - 10;
+    const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = "#f1f5f9"; ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    // Cañerías con luz interna
+    [[cx - pipeW - 10], [cx + 10]].forEach(([x]) => {
+      ctx.fillStyle = "#facc15"; ctx.strokeStyle = "#ca8a04"; ctx.lineWidth = 1.5;
+      ctx.fillRect(x, top, pipeW, pipeH); ctx.strokeRect(x, top, pipeW, pipeH);
+      ctx.fillStyle = "#e8f3fa"; ctx.fillRect(x, boreT, pipeW, boreB - boreT);
+    });
+    ctx.fillStyle = "#64748b"; ctx.font = "600 10px system-ui";
+    ctx.fillText("luz interna (paso de gas)", cx - pipeW - 2, cy + 3);
+
+    // Cuerpo de la cupla
+    let heat = rv < 0.8 ? 0.08 + rv * 0.2 : Math.min(0.95, 0.3 + (rv - 0.8) * 0.6);
+    let body = mix([30, 41, 59], [194, 65, 12], heat);
+    if (rv > 1.8) body = mix([194, 65, 12], [60, 25, 12], clamp((rv - 1.8) / 0.8, 0, 1) * 0.7);
+    ctx.fillStyle = body;
+    ctx.fillRect(cx - couplerW / 2, cy - couplerH / 2, couplerW, wall);
+    ctx.fillRect(cx - couplerW / 2, bot, couplerW, wall);
+    ctx.fillRect(cx - 8, top, 16, 6); ctx.fillRect(cx - 8, bot - 6, 16, 6);
+
+    // Pileta de fusión
+    if (k === 'cold') {
+      const n = Math.floor(clamp((rv - 0.25) / 0.55, 0, 1) * 8);
+      const xs = [-70, 55, -52, 68, -40, 44, -62, 36];
+      ctx.fillStyle = "rgba(253,186,116,0.9)";
+      for (let i = 0; i < n; i++) {
+        ctx.beginPath(); ctx.arc(cx + xs[i], i % 2 ? bot : top, 2.4, 0, Math.PI * 2); ctx.fill();
+      }
+    } else {
+      const ext = k === 'ok' ? 3 : k === 'over' ? 3 + (rv - 1.2) / 0.6 * 27 : 30;
+      const th = k === 'ok' ? 4 : k === 'over' ? 4 + (rv - 1.2) / 0.6 * 4 : 8 + clamp((rv - 1.8) / 0.6, 0, 1) * 4;
+      ctx.fillStyle = k === 'severe' ? "#c2410c" : "#f97316";
+      [[-75 - ext, -35 + ext], [35 - ext, 75 + ext]].forEach(([a, b]) => {
+        const x0 = cx + Math.max(a, -105), x1 = cx + Math.min(b, 105);
+        ctx.fillRect(x0, top - th / 2, x1 - x0, th);
+        ctx.fillRect(x0, bot - th / 2, x1 - x0, th);
+      });
+      // Material extruido por los extremos de la cupla
+      if (k === 'over' || k === 'severe') {
+        const rb = 3 + clamp((rv - 1.2) / 1.0, 0, 1) * 6;
+        ctx.fillStyle = "#ea580c";
+        [-1, 1].forEach(sg => [top, bot].forEach(y => {
+          ctx.beginPath(); ctx.arc(cx + sg * (couplerW / 2 + 1), y, rb, 0, Math.PI * 2); ctx.fill();
+        }));
+      }
+    }
+
+    // Invasión de la luz interna
+    const inv = invasion(rv);
+    if (inv > 0) {
+      ctx.fillStyle = "#ea580c";
+      for (let x = -78; x <= 78; x += 13) {
+        if (Math.abs(x) < 9) continue;
+        ctx.beginPath(); ctx.ellipse(cx + x, boreT, 9, inv, 0, 0, Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(cx + x, boreB, 9, inv, 0, Math.PI, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    // Espiras
+    let coilColor;
+    if (rv < 1) coilColor = mix([125, 211, 252], [251, 146, 60], clamp(rv, 0, 1));
+    else if (rv < 1.8) coilColor = mix([251, 146, 60], [255, 245, 170], clamp((rv - 1) / 0.8, 0, 1));
+    else coilColor = "#fff7d6";
+    const cyTop = top - wall / 2, cyBot = bot + wall / 2;
+    ctx.fillStyle = coilColor;
+    const coils = [-75, -65, -55, -45, -35, 35, 45, 55, 65, 75];
+    coils.forEach(o => [cyTop, cyBot].forEach(y => { ctx.beginPath(); ctx.arc(cx + o, y, 2.8, 0, Math.PI * 2); ctx.fill(); }));
+    if (rv >= 1.8) {                                  // cortocircuito entre espiras
+      ctx.strokeStyle = "#fde047"; ctx.lineWidth = 1.6;
+      [cyTop, cyBot].forEach(y => {
+        [[-75, -65], [-55, -45], [35, 45], [65, 75]].forEach(([a, b]) => {
+          ctx.beginPath(); ctx.moveTo(cx + a, y);
+          ctx.lineTo(cx + (a + b) / 2 - 1, y - 5); ctx.lineTo(cx + (a + b) / 2 + 1, y + 4); ctx.lineTo(cx + b, y);
+          ctx.stroke();
+        });
+      });
+    }
+
+    // Bornes y testigos
+    const ct = cy - couplerH / 2;
+    ctx.fillStyle = "#475569";
+    ctx.fillRect(cx - 55, ct - 18, 14, 18); ctx.fillRect(cx + 41, ct - 18, 14, 18);
+    let lift = 0, ejected = false;
+    if (rv >= 0.8 && rv < 1.2) lift = clamp((rv - 0.8) / 0.2, 0, 1) * 9;
+    else if (rv >= 1.2 && rv < 1.8) lift = 9 + (rv - 1.2) / 0.6 * 6;
+    else if (rv >= 1.8) { lift = 30; ejected = true; }
+    if (rv >= 1.2) {                                  // fundido desbordado en la base de los testigos
+      ctx.fillStyle = "#ea580c";
+      [-24.5, 24.5].forEach(o => { ctx.beginPath(); ctx.ellipse(cx + o, ct - 1, 7 + (ejected ? 4 : 0), 3 + (ejected ? 3 : 1), 0, Math.PI, Math.PI * 2); ctx.fill(); });
+    }
+    ctx.fillStyle = "#ef4444";
+    [-28, 21].forEach((o, i) => {
+      ctx.save();
+      ctx.translate(cx + o + 3.5, ct - lift);
+      if (ejected) ctx.rotate(i ? 0.5 : -0.4);
+      ctx.fillRect(-3.5, -5, 7, 10);
+      ctx.restore();
+    });
+
+    // Zonas ZF / ZC
+    const collapsed = k === 'over' || k === 'severe';
+    const zy = cy + couplerH / 2 + 8;
+    ctx.font = "700 10px system-ui"; ctx.textAlign = "center";
+    [[-105, -75, "ZF"], [-75, -35, "ZC"], [-35, 35, "ZF"], [35, 75, "ZC"], [75, 105, "ZF"]].forEach(([a, b, t]) => {
+      ctx.strokeStyle = t === "ZC" ? "#ea580c" : (collapsed ? "#dc2626" : "#0284c7");
+      ctx.fillStyle = ctx.strokeStyle; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx + a + 2, zy); ctx.lineTo(cx + b - 2, zy); ctx.stroke();
+      ctx.fillText(t, cx + (a + b) / 2, zy + 13);
+    });
+    ctx.textAlign = "center"; ctx.font = "600 10px system-ui";
+    ctx.fillStyle = collapsed ? "#dc2626" : "#64748b";
+    ctx.fillText(collapsed ? "ZF colapsadas: pérdida de contención" : (k === 'cold' ? "ZC apenas tibia: sin pileta continua" : "ZF = zona fría   ZC = zona caliente"), cx, zy + 28);
+    ctx.textAlign = "left";
+
+    // Rótulos superiores
+    ctx.fillStyle = "#64748b"; ctx.font = "600 11px system-ui";
+    ctx.fillText((S.auto ? "AUTOMÁTICA · CÓDIGO DE BARRAS" : "MÁQUINA MANUAL"), 18, 25);
+    ctx.font = "500 11px system-ui";
+    ctx.fillText(`${nf(S.V, 1)} V · ${S.t} s · ${S.auto ? "compensada" : opt('temp', P.temp).txt}`, 18, 42);
+    ctx.textAlign = "right";
+    if (inv > 0) {
+      ctx.fillStyle = "#dc2626"; ctx.font = "700 11px system-ui";
+      ctx.fillText(`Luz libre: ${Math.round((1 - 2 * inv / (boreB - boreT)) * 100)} %`, W - 18, 25);
+    }
+    if (S.interrupted && !S.refusion) {
+      ctx.fillStyle = "#ea580c"; ctx.font = "700 11px system-ui";
+      ctx.fillText(S.aborted ? "⏸ CICLO ABORTADO POR LA MÁQUINA" : "⏸ CICLO INTERRUMPIDO", W - 18, inv > 0 ? 42 : 25);
+    }
+    ctx.textAlign = "center";
+    ctx.font = "700 12px system-ui";
+    if (paramProg < 1) { ctx.fillStyle = "#64748b"; ctx.fillText("calentando…", cx, H - 14); }
+    else {
+      const res = { ok: ["#16a34a", "✔ FUSIÓN CORRECTA"], cold: ["#2563eb", "FUSIÓN FRÍA: UNIÓN NO HERMÉTICA"], over: ["#dc2626", "SOBREFUSIÓN: FUNDIDO EN LA LUZ DEL CAÑO"], severe: ["#dc2626", "SOBREFUSIÓN SEVERA: ESPIRAS EN CORTO"] }[S.cls];
+      ctx.fillStyle = res[0]; ctx.fillText(res[1], cx, H - 14);
+    }
+    ctx.textAlign = "left";
+
+    // Refusión: cartel bloqueante
+    if (S.refusion) {
+      ctx.fillStyle = "rgba(255,255,255,0.68)"; ctx.fillRect(0, 0, W, H);
+      const bw = 440, bh = 104, bx = cx - bw / 2, by = cy - bh / 2 - 6;
+      ctx.fillStyle = "#7f1d1d"; ctx.fillRect(bx, by, bw, bh);
+      ctx.strokeStyle = "#fecaca"; ctx.lineWidth = 2; ctx.strokeRect(bx + 4, by + 4, bw - 8, bh - 8);
+      ctx.fillStyle = "#fff"; ctx.textAlign = "center";
+      ctx.font = "700 17px system-ui"; ctx.fillText("⛔ FUSIÓN BLOQUEADA — NAG-140", cx, by + 34);
+      ctx.font = "500 12px system-ui";
+      ctx.fillText("El accesorio ya recibió un ciclo de fusión: prohibido recalentar.", cx, by + 58);
+      ctx.fillText("Inutilizar la pieza (entalladura ≈ 50 %) y rehacer con una nueva.", cx, by + 77);
+      ctx.textAlign = "left";
+    }
   }
 
   /* ---------- Modo evaluación ---------- */
